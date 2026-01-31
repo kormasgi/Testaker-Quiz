@@ -3,14 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Study</title>
+
+<title>Testaker – Study</title>
 
 <link rel="stylesheet" href="style.css">
 
 <style>
-
-/* Button colors */
-
 .blueBtn{
   background:#2563eb;
   color:white;
@@ -19,13 +17,12 @@
 .blueBtn:hover{
   background:#1d4ed8;
 }
-
 </style>
 </head>
 
 <body>
 
-<header>📚 Study Center</header>
+<header>📚 Testaker Study Center</header>
 
 <main>
 
@@ -34,9 +31,9 @@
 
 <h2>Choose Mode</h2>
 
-<button class="blueBtn" type = "button" onclick="startFlash()">🔁 Flashcards</button>
-<button class="blueBtn" type = "button" onclick="startTest()">📝 Test</button>
-<button class="blueBtn" type = "button" onclick="startSmart()">🧠 Smart Study</button>
+<button type="button" class="blueBtn" onclick="startFlash()">Flashcards</button>
+<button type="button" class="blueBtn" onclick="startTest()">Test</button>
+<button type="button" class="blueBtn" onclick="startSmart()">Smart Study</button>
 
 </div>
 
@@ -53,12 +50,12 @@
 
 <div id="flashBtns" class="flash-buttons hidden">
 
-<button class="good" type = "button" onclick="markFlash(true)">
-✅ I Knew This
+<button type="button" class="good" onclick="markFlash(true)">
+I Knew This
 </button>
 
-<button class="bad" type = "button" onclick="markFlash(false)">
-❌ I Didn’t Know
+<button type="button" class="bad" onclick="markFlash(false)">
+I Didn’t Know
 </button>
 
 </div>
@@ -66,12 +63,12 @@
 
 <div id="flashEnd" class="hidden">
 
-<button class="blueBtn" type = "button" onclick="reviewFlash()">
-📌 Study Unknown
+<button type="button" class="blueBtn" onclick="reviewFlash()">
+Study Unknown
 </button>
 
-<button class="blueBtn" type = "button" onclick="startFlash()">
-🔁 Try Again
+<button type="button" class="blueBtn" onclick="startFlash()">
+Try Again
 </button>
 
 </div>
@@ -86,12 +83,11 @@
 
 <form id="testForm" onsubmit="return false;"></form>
 
-
 <button
-  type="button"
-  id="submitBtn"
-  class="submit-test blueBtn"
-  onclick="submitTest()">
+type="button"
+id="submitBtn"
+class="submit-test blueBtn"
+onclick="submitTest()">
 
 Submit
 
@@ -100,12 +96,12 @@ Submit
 
 <div id="testEnd" class="hidden">
 
-<button class="blueBtn" type = "button" onclick="reviewTest()">
-📌 Study Wrong
+<button type="button" class="blueBtn" onclick="reviewTest()">
+Study Wrong
 </button>
 
-<button class="blueBtn" type = "button" onclick="startTest()">
-🔁 Try Again
+<button type="button" class="blueBtn" onclick="startTest()">
+Try Again
 </button>
 
 </div>
@@ -116,7 +112,7 @@ Submit
 <!-- SMART -->
 <div id="smartMode" class="hidden">
 
-<h2>🧠 Smart Study</h2>
+<h2>Smart Study</h2>
 
 <div id="smartQ" class="smart-box"></div>
 
@@ -124,8 +120,9 @@ Submit
 
 <input id="smartInput" placeholder="Type answer">
 
-<button id="smartBtn"
-type = "button"
+<button
+type="button"
+id="smartBtn"
 class="submit-test blueBtn"
 onclick="checkSmart()">
 
@@ -135,12 +132,12 @@ Submit
 
 
 <button
-  type="button"
-  id="smartRetry"
-  class="blueBtn hidden"
-  onclick="startSmart()">
+type="button"
+id="smartRetry"
+class="blueBtn hidden"
+onclick="startSmart()">
 
-🔁 Try Again
+Try Again
 
 </button>
 
@@ -151,34 +148,31 @@ Submit
 
 <script>
 
-// ---------------- SOUNDS ----------------
+/* ================= SOUNDS ================= */
 
-const correctSound = new Audio("sounds/correct answer.wav");
-const wrongSound   = new Audio("sounds/wrong answer.wav");
-const streakLostSound = new Audio("sounds/streak.mp3");
+const correctSound = new Audio("sounds/correct.mp3");
+const wrongSound = new Audio("sounds/wrong.mp3");
+const streakSound = new Audio("sounds/streak.mp3");
 
-// Allow playback after user interaction
-document.addEventListener("click", () => {
+// unlock audio
+document.addEventListener("click", ()=>{
   correctSound.play().catch(()=>{});
   correctSound.pause();
-  correctSound.currentTime = 0;
-}, { once:true });
+  correctSound.currentTime=0;
+},{once:true});
 
 
+/* ================= DATA ================= */
 
-// ---------------- DATA ----------------
+const id = new URLSearchParams(location.search).get("id");
 
-const id =
-new URLSearchParams(location.search).get("id");
-
-let quizzes =
-JSON.parse(localStorage.getItem("quizzes")||"{}");
+let quizzes = JSON.parse(localStorage.getItem("quizzes")||"{}");
 
 let allData = quizzes[id] || [];
 
 let data = [];
 
-let i = 0;
+let index = 0;
 
 let wrongFlash = [];
 let wrongTest = [];
@@ -186,30 +180,21 @@ let wrongTest = [];
 let flashStreak = 0;
 
 
-
-// ---------------- SAVE ----------------
+/* ================= SAVE ================= */
 
 function save(){
-
-quizzes[id] = allData;
-
-localStorage.setItem(
-"quizzes",
-JSON.stringify(quizzes)
-);
-
+  quizzes[id]=allData;
+  localStorage.setItem("quizzes",JSON.stringify(quizzes));
 }
 
 
-
-// ---------------- UTIL ----------------
+/* ================= UTIL ================= */
 
 function hideAll(){
 
 ["modeSelect","flashMode","testMode","smartMode"]
-.forEach(id=>{
-document.getElementById(id)
-.classList.add("hidden");
+.forEach(e=>{
+document.getElementById(e).classList.add("hidden");
 });
 
 }
@@ -220,35 +205,30 @@ function shuffle(arr){
 for(let i=arr.length-1;i>0;i--){
 
 const j=Math.floor(Math.random()*(i+1));
-
 [arr[i],arr[j]]=[arr[j],arr[i]];
-}
 
 }
 
+}
 
 
-// ---------------- FLASH ----------------
+/* ================= FLASH ================= */
 
 function startFlash(){
 
 hideAll();
 
 data=[...allData];
-
 wrongFlash=[];
-
 flashStreak=0;
 
 shuffle(data);
 
-i=0;
+index=0;
 
-document.getElementById("flashEnd")
-.classList.add("hidden");
+document.getElementById("flashEnd").classList.add("hidden");
 
-document.getElementById("flashMode")
-.classList.remove("hidden");
+document.getElementById("flashMode").classList.remove("hidden");
 
 showFlash();
 }
@@ -256,25 +236,19 @@ showFlash();
 
 function showFlash(){
 
-document.getElementById("flashBtns")
-.classList.add("hidden");
+document.getElementById("flashBtns").classList.add("hidden");
 
-document.getElementById("flashCard")
-.classList.remove("flipped");
+document.getElementById("flashCard").classList.remove("flipped");
 
-document.querySelector(".front").textContent=data[i].q;
-
-document.querySelector(".back").textContent=data[i].a;
+document.querySelector(".front").textContent=data[index].q;
+document.querySelector(".back").textContent=data[index].a;
 }
 
 
 function flip(){
 
-document.getElementById("flashCard")
-.classList.add("flipped");
-
-document.getElementById("flashBtns")
-.classList.remove("hidden");
+document.getElementById("flashCard").classList.add("flipped");
+document.getElementById("flashBtns").classList.remove("hidden");
 }
 
 
@@ -283,10 +257,8 @@ function markFlash(ok){
 if(ok){
 
 correctSound.play();
-
 flashStreak++;
-
-data[i].score++;
+data[index].score++;
 
 }
 
@@ -294,24 +266,25 @@ else{
 
 wrongSound.play();
 
-if(flashStreak>0) streakLostSound.play();
+if(flashStreak>0) streakSound.play();
 
 flashStreak=0;
 
-data[i].score-=2;
+data[index].score-=2;
 
-wrongFlash.push(data[i]);
+wrongFlash.push(data[index]);
+
 }
 
 save();
 
-i++;
+index++;
 
-if(i>=data.length){
+if(index>=data.length){
 
 endFlash();
-
 return;
+
 }
 
 showFlash();
@@ -320,33 +293,46 @@ showFlash();
 
 function endFlash(){
 
-document.getElementById("flashBtns")
-.classList.add("hidden");
-
-document.getElementById("flashEnd")
-.classList.remove("hidden");
+document.getElementById("flashBtns").classList.add("hidden");
+document.getElementById("flashEnd").classList.remove("hidden");
 }
 
 
+function reviewFlash(){
 
-// ---------------- TEST ----------------
+if(!wrongFlash.length) return;
+
+hideAll();
+
+data=[...wrongFlash];
+wrongFlash=[];
+
+shuffle(data);
+
+index=0;
+
+document.getElementById("flashEnd").classList.add("hidden");
+
+document.getElementById("flashMode").classList.remove("hidden");
+
+showFlash();
+}
+
+
+/* ================= TEST ================= */
 
 function startTest(){
 
 hideAll();
 
 data=[...allData];
-
 wrongTest=[];
 
-document.getElementById("submitBtn")
-.classList.remove("hidden");
+document.getElementById("submitBtn").disabled=false;
 
-document.getElementById("testEnd")
-.classList.add("hidden");
+document.getElementById("testEnd").classList.add("hidden");
 
-document.getElementById("testMode")
-.classList.remove("hidden");
+document.getElementById("testMode").classList.remove("hidden");
 
 buildTest();
 }
@@ -358,7 +344,7 @@ const form=document.getElementById("testForm");
 
 form.innerHTML="";
 
-data.forEach((item,idx)=>{
+data.forEach((item,i)=>{
 
 const div=document.createElement("div");
 
@@ -366,14 +352,16 @@ div.className="test-question";
 
 div.innerHTML=`
 
-<div>${idx+1}. ${item.q}</div>
+<div>${i+1}. ${item.q}</div>
 
-<input data-i="${idx}">
+<input data-i="${i}">
 
 `;
 
 form.appendChild(div);
+
 });
+
 }
 
 
@@ -381,48 +369,56 @@ function submitTest(){
 
 wrongTest=[];
 
-const inputs=
-document.querySelectorAll("#testForm input");
+const inputs=document.querySelectorAll("#testForm input");
 
 inputs.forEach(input=>{
 
 const i=input.dataset.i;
 
 const user=input.value.trim().toLowerCase();
-
 const real=data[i].a.toLowerCase();
-
 
 if(user===real && user!==""){
 
 data[i].score++;
-
 input.style.borderColor="green";
+
 }
 
 else{
 
 data[i].score-=2;
-
 wrongTest.push(data[i]);
-
 input.style.borderColor="red";
+
 }
 
 });
 
 save();
 
-document.getElementById("submitBtn")
-.classList.add("hidden");
+document.getElementById("submitBtn").disabled=true;
 
-document.getElementById("testEnd")
-.classList.remove("hidden");
+document.getElementById("testEnd").classList.remove("hidden");
 }
 
 
+function reviewTest(){
 
-// ---------------- SMART ----------------
+if(!wrongTest.length) return;
+
+hideAll();
+
+data=[...wrongTest];
+wrongTest=[];
+
+document.getElementById("testMode").classList.remove("hidden");
+
+buildTest();
+}
+
+
+/* ================= SMART ================= */
 
 let smartQueue=[];
 let smartIndex=0;
@@ -434,19 +430,22 @@ function startSmart(){
 
 hideAll();
 
-document.getElementById("smartRetry")
-.classList.add("hidden");
+smartIndex=0;
+redo=false;
+current=null;
+
+document.getElementById("smartRetry").classList.add("hidden");
 
 document.getElementById("smartInput").style.display="block";
-
 document.getElementById("smartBtn").style.display="block";
 
-document.getElementById("smartMode")
-.classList.remove("hidden");
+document.getElementById("smartInput").value="";
+
+document.getElementById("smartAnswer").classList.add("hidden");
+
+document.getElementById("smartMode").classList.remove("hidden");
 
 buildSmartQueue();
-
-smartIndex=0;
 
 nextSmart();
 }
@@ -454,8 +453,7 @@ nextSmart();
 
 function buildSmartQueue(){
 
-smartQueue=
-allData.filter(q=>q.score<5);
+smartQueue=allData.filter(q=>q.score<5);
 
 shuffle(smartQueue);
 }
@@ -465,32 +463,24 @@ function nextSmart(){
 
 redo=false;
 
-document.getElementById("smartAnswer")
-.classList.add("hidden");
-
+document.getElementById("smartAnswer").classList.add("hidden");
 
 if(smartIndex>=smartQueue.length){
 
-document.getElementById("smartQ")
-.textContent="🎉 Mastered!";
+document.getElementById("smartQ").textContent="🎉 Mastered!";
 
-document.getElementById("smartInput")
-.style.display="none";
+document.getElementById("smartInput").style.display="none";
+document.getElementById("smartBtn").style.display="none";
 
-document.getElementById("smartBtn")
-.style.display="none";
-
-document.getElementById("smartRetry")
-.classList.remove("hidden");
+document.getElementById("smartRetry").classList.remove("hidden");
 
 return;
-}
 
+}
 
 current=smartQueue[smartIndex];
 
-document.getElementById("smartQ")
-.textContent=current.q;
+document.getElementById("smartQ").textContent=current.q;
 
 document.getElementById("smartInput").value="";
 }
@@ -498,16 +488,13 @@ document.getElementById("smartInput").value="";
 
 function checkSmart(){
 
-const input=
-document.getElementById("smartInput")
+const input=document.getElementById("smartInput")
 .value.trim().toLowerCase();
 
 if(!input) return;
 
 const real=current.a.toLowerCase();
 
-
-// First try
 if(!redo){
 
 if(input===real){
@@ -515,12 +502,11 @@ if(input===real){
 correctSound.play();
 
 current.score++;
-
 save();
 
 smartIndex++;
-
 nextSmart();
+
 }
 
 else{
@@ -528,21 +514,20 @@ else{
 wrongSound.play();
 
 current.score-=2;
-
 save();
 
 redo=true;
 
 document.getElementById("smartAnswer")
-.textContent="❌ Correct: "+current.a;
+.textContent="Correct: "+current.a;
 
 document.getElementById("smartAnswer")
 .classList.remove("hidden");
-}
 
 }
 
-// Redo
+}
+
 else{
 
 if(input===real){
@@ -552,8 +537,8 @@ correctSound.play();
 redo=false;
 
 smartIndex++;
-
 nextSmart();
+
 }
 
 }
