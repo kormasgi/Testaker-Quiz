@@ -458,12 +458,23 @@ function startSmart(){
   document.getElementById("smartMode").classList.remove("hidden");
 
 
-  // Initialize scores
+  // Init scores
   allData.forEach(q=>{
     if(typeof q.score !== "number"){
       q.score = 0;
     }
   });
+
+
+  // If all mastered → reset
+  if(allData.every(q=>q.score >= 5)){
+
+    allData.forEach(q=>{
+      q.score = 0;
+    });
+
+  }
+
 
   save();
 
@@ -475,7 +486,7 @@ function startSmart(){
 }
 
 
-/* Build Pool (Weighted) */
+/* Build Pool */
 
 function buildSmartPool(){
 
@@ -484,6 +495,7 @@ function buildSmartPool(){
 
   allData.forEach(q=>{
 
+    // Only non-mastered
     if(q.score < 5){
 
       let weight = Math.max(1, 6 - q.score);
@@ -501,7 +513,7 @@ function buildSmartPool(){
 }
 
 
-/* Pick Next */
+/* Next */
 
 function nextSmart(){
 
@@ -510,8 +522,8 @@ function nextSmart(){
   document.getElementById("smartAnswer").classList.add("hidden");
 
 
-  // Check finish
-  if(allData.every(q=>q.score >= 5)){
+  // No questions left
+  if(smartPool.length === 0){
 
     document.getElementById("smartQ").textContent =
       "🎉 Smart Study Complete!";
@@ -527,13 +539,7 @@ function nextSmart(){
   }
 
 
-  // Rebuild if empty
-  if(smartPool.length === 0){
-    buildSmartPool();
-  }
-
-
-  // Pick without repeating
+  // Pick different from last
   let next;
 
   do{
@@ -565,6 +571,7 @@ function updateProgress(){
   allData.forEach(q=>{
     currentScore += Math.min(5, q.score);
   });
+
 
   let percent = (currentScore / total) * 100;
 
@@ -599,7 +606,7 @@ function checkSmart(){
   const real = current.a.toLowerCase();
 
 
-  /* First attempt */
+  /* First */
 
   if(!redo){
 
@@ -608,7 +615,16 @@ function checkSmart(){
 
       correctSound.play();
 
-      current.score += 1;
+      current.score++;
+
+      // Remove if mastered
+      if(current.score >= 5){
+
+        smartPool = smartPool.filter(
+          q => q !== current
+        );
+
+      }
 
       save();
 
@@ -643,7 +659,7 @@ function checkSmart(){
   }
 
 
-  /* Redo (no score) */
+  /* Redo */
 
   else{
 
