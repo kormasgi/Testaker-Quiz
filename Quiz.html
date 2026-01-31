@@ -156,7 +156,11 @@ const streakSound = new Audio("sounds/streak.mp3");
 
 // unlock audio
 document.addEventListener("click", ()=>{
-  correctSound.play().catch(()=>{});
+  correctSound.play()
+  if (currentTime >= .2){
+    correctSound.pause();
+    correctSound.currentTime=0;
+  }
   correctSound.pause();
   correctSound.currentTime=0;
 },{once:true});
