@@ -13,7 +13,6 @@
   background:#2563eb;
   color:white;
 }
-
 .blueBtn:hover{
   background:#1d4ed8;
 }
@@ -31,9 +30,9 @@
 
 <h2>Choose Mode</h2>
 
-<button type="button" class="blueBtn" onclick="startFlash()">Flashcards</button>
-<button type="button" class="blueBtn" onclick="startTest()">Test</button>
-<button type="button" class="blueBtn" onclick="startSmart()">Smart Study</button>
+<button class="blueBtn" onclick="startFlash()">Flashcards</button>
+<button class="blueBtn" onclick="startTest()">Test</button>
+<button class="blueBtn" onclick="startSmart()">Smart Study</button>
 
 </div>
 
@@ -50,26 +49,15 @@
 
 <div id="flashBtns" class="flash-buttons hidden">
 
-<button type="button" class="good" onclick="markFlash(true)">
-I Knew This
-</button>
-
-<button type="button" class="bad" onclick="markFlash(false)">
-I Didn’t Know
-</button>
+<button class="good" onclick="markFlash(true)">I Knew This</button>
+<button class="bad" onclick="markFlash(false)">I Didn’t Know</button>
 
 </div>
 
-
 <div id="flashEnd" class="hidden">
 
-<button type="button" class="blueBtn" onclick="reviewFlash()">
-Study Unknown
-</button>
-
-<button type="button" class="blueBtn" onclick="startFlash()">
-Try Again
-</button>
+<button class="blueBtn" onclick="reviewFlash()">Study Unknown</button>
+<button class="blueBtn" onclick="startFlash()">Try Again</button>
 
 </div>
 
@@ -81,28 +69,16 @@ Try Again
 
 <h2>Test</h2>
 
-<form id="testForm" onsubmit="return false;"></form>
+<form id="testForm"></form>
 
-<button
-type="button"
-id="submitBtn"
-class="submit-test blueBtn"
-onclick="submitTest()">
-
+<button id="submitBtn" class="submit-test blueBtn" onclick="submitTest()">
 Submit
-
 </button>
-
 
 <div id="testEnd" class="hidden">
 
-<button type="button" class="blueBtn" onclick="reviewTest()">
-Study Wrong
-</button>
-
-<button type="button" class="blueBtn" onclick="startTest()">
-Try Again
-</button>
+<button class="blueBtn" onclick="reviewTest()">Study Wrong</button>
+<button class="blueBtn" onclick="startTest()">Try Again</button>
 
 </div>
 
@@ -122,28 +98,33 @@ Try Again
 
 <div id="smartAnswer" class="hidden"></div>
 
-<input id="smartInput" class = "test-question" placeholder="Type answer">
+<input id="smartInput" class="test-question" placeholder="Type answer">
 
-<button
-type="button"
-id="smartBtn"
-class="submit-test blueBtn"
-onclick="checkSmart()">
-
+<button id="smartBtn" class="submit-test blueBtn" onclick="checkSmart()">
 Submit
-
 </button>
 
-
-<button
-type="button"
-id="smartRetry"
-class="blueBtn hidden"
-onclick="startSmart()">
-
+<button id="smartRetry" class="blueBtn hidden" onclick="startSmart()">
 Try Again
-
 </button>
+
+
+<!-- WEAK SUMMARY -->
+<div id="weakBox" class="hidden">
+
+<h3>📉 Weak Points</h3>
+
+<div id="weakList"></div>
+
+<button class="blueBtn" onclick="studyWeakFlash()">
+Study Weakpoints (Flashcards)
+</button>
+
+<button class="blueBtn" onclick="studyWeakSmart()">
+Study Weakpoints (Smart Study)
+</button>
+
+</div>
 
 </div>
 
@@ -152,43 +133,44 @@ Try Again
 
 <script>
 
-/* ================= SOUNDS ================= */
+/* ============ SOUNDS ============ */
 
-const correctSound = new Audio("sounds/correct.wav");
-const wrongSound = new Audio("sounds/wrong.wav");
-const streakSound = new Audio("sounds/streak.mp3");
+const correctSound=new Audio("sounds/correct.wav");
+const wrongSound=new Audio("sounds/wrong.wav");
+const streakSound=new Audio("sounds/streak.mp3");
 
-// unlock audio
-document.addEventListener("click", ()=>{
-  correctSound.play()
-  if (currentTime >= .2){
-    correctSound.pause();
-    correctSound.currentTime=0;
-  }
+document.addEventListener("click",()=>{
+  correctSound.play();
   correctSound.pause();
   correctSound.currentTime=0;
 },{once:true});
 
 
-/* ================= DATA ================= */
+/* ============ DATA ============ */
 
-const id = new URLSearchParams(location.search).get("id");
+const id=new URLSearchParams(location.search).get("id");
 
-let quizzes = JSON.parse(localStorage.getItem("quizzes")||"{}");
+let quizzes=JSON.parse(localStorage.getItem("quizzes")||"{}");
+let allData=quizzes[id]||[];
 
-let allData = quizzes[id] || [];
+let data=[];
+let index=0;
 
-let data = [];
+let wrongFlash=[];
+let wrongTest=[];
 
-let index = 0;
-
-let wrongFlash = [];
-let wrongTest = [];
-
-let flashStreak = 0;
+let flashStreak=0;
 
 
-/* ================= SAVE ================= */
+/* INIT EXTRA DATA */
+
+allData.forEach(q=>{
+  if(typeof q.score!=="number") q.score=0;
+  if(typeof q.seen!=="number") q.seen=0;
+});
+
+
+/* ============ SAVE ============ */
 
 function save(){
   quizzes[id]=allData;
@@ -196,31 +178,27 @@ function save(){
 }
 
 
-/* ================= UTIL ================= */
+/* ============ UTIL ============ */
 
 function hideAll(){
 
 ["modeSelect","flashMode","testMode","smartMode"]
-.forEach(e=>{
-document.getElementById(e).classList.add("hidden");
+.forEach(id=>{
+document.getElementById(id).classList.add("hidden");
 });
 
 }
 
 
 function shuffle(arr){
-
 for(let i=arr.length-1;i>0;i--){
-
 const j=Math.floor(Math.random()*(i+1));
 [arr[i],arr[j]]=[arr[j],arr[i]];
-
+}
 }
 
-}
 
-
-/* ================= FLASH ================= */
+/* ============ FLASH ============ */
 
 function startFlash(){
 
@@ -254,7 +232,6 @@ document.querySelector(".back").textContent=data[index].a;
 
 
 function flip(){
-
 document.getElementById("flashCard").classList.add("flipped");
 document.getElementById("flashBtns").classList.remove("hidden");
 }
@@ -268,9 +245,7 @@ correctSound.play();
 flashStreak++;
 data[index].score++;
 
-}
-
-else{
+}else{
 
 wrongSound.play();
 
@@ -281,7 +256,6 @@ flashStreak=0;
 data[index].score-=2;
 
 wrongFlash.push(data[index]);
-
 }
 
 save();
@@ -289,10 +263,8 @@ save();
 index++;
 
 if(index>=data.length){
-
 endFlash();
 return;
-
 }
 
 showFlash();
@@ -300,7 +272,6 @@ showFlash();
 
 
 function endFlash(){
-
 document.getElementById("flashBtns").classList.add("hidden");
 document.getElementById("flashEnd").classList.remove("hidden");
 }
@@ -327,7 +298,7 @@ showFlash();
 }
 
 
-/* ================= TEST ================= */
+/* ============ TEST ============ */
 
 function startTest(){
 
@@ -337,7 +308,6 @@ data=[...allData];
 wrongTest=[];
 
 document.getElementById("submitBtn").disabled=false;
-
 document.getElementById("testEnd").classList.add("hidden");
 
 document.getElementById("testMode").classList.remove("hidden");
@@ -359,11 +329,8 @@ const div=document.createElement("div");
 div.className="test-question";
 
 div.innerHTML=`
-
 <div>${i+1}. ${item.q}</div>
-
 <input data-i="${i}">
-
 `;
 
 form.appendChild(div);
@@ -391,14 +358,11 @@ if(user===real && user!==""){
 data[i].score++;
 input.style.borderColor="green";
 
-}
-
-else{
+}else{
 
 data[i].score-=2;
 wrongTest.push(data[i]);
 input.style.borderColor="red";
-
 }
 
 });
@@ -406,7 +370,6 @@ input.style.borderColor="red";
 save();
 
 document.getElementById("submitBtn").disabled=true;
-
 document.getElementById("testEnd").classList.remove("hidden");
 }
 
@@ -426,257 +389,269 @@ buildTest();
 }
 
 
-/* ================= SMART ================= */
+/* ============ SMART STUDY ============ */
 
-let smartPool = [];
-let lastQuestion = null;
+let smartPool=[];
+let last=null;
+let redo=false;
+let current=null;
 
-let redo = false;
-let current = null;
-
-
-/* Start Smart */
 
 function startSmart(){
 
-  hideAll();
+hideAll();
 
-  redo = false;
-  current = null;
-  lastQuestion = null;
+redo=false;
+current=null;
+last=null;
 
+document.getElementById("weakBox").classList.add("hidden");
 
-  document.getElementById("smartRetry").classList.add("hidden");
+document.getElementById("smartRetry").classList.add("hidden");
 
-  document.getElementById("smartInput").style.display = "block";
-  document.getElementById("smartBtn").style.display = "block";
+document.getElementById("smartInput").style.display="block";
+document.getElementById("smartBtn").style.display="block";
 
-  document.getElementById("smartInput").value = "";
+document.getElementById("smartMode").classList.remove("hidden");
 
-  document.getElementById("smartAnswer").classList.add("hidden");
-
-  document.getElementById("smartMode").classList.remove("hidden");
-
-
-  // Init scores
-  allData.forEach(q=>{
-    if(typeof q.score !== "number"){
-      q.score = 0;
-    }
-  });
-
-
-  // If all mastered → reset
-  if(allData.every(q=>q.score >= 5)){
-
-    allData.forEach(q=>{
-      q.score = 0;
-    });
-
-  }
-
-
-  save();
-
-  buildSmartPool();
-
-  updateProgress();
-
-  nextSmart();
+buildSmartPool();
+updateProgress();
+nextSmart();
 }
 
-
-/* Build Pool */
 
 function buildSmartPool(){
 
-  smartPool = [];
+smartPool=[];
 
+allData.forEach(q=>{
 
-  allData.forEach(q=>{
+if(q.score<5){
 
-    // Only non-mastered
-    if(q.score < 5){
+let w=Math.max(1,6-q.score);
 
-      let weight = Math.max(1, 6 - q.score);
-      weight = Math.min(weight, 8);
-
-      for(let i=0;i<weight;i++){
-        smartPool.push(q);
-      }
-
-    }
-
-  });
-
-  shuffle(smartPool);
+for(let i=0;i<w;i++){
+smartPool.push(q);
 }
 
+}
 
-/* Next */
+});
+
+shuffle(smartPool);
+}
+
 
 function nextSmart(){
 
-  redo = false;
+redo=false;
 
-  document.getElementById("smartAnswer").classList.add("hidden");
-
-
-  // No questions left
-  if(smartPool.length === 0){
-
-    document.getElementById("smartQ").textContent =
-      "🎉 Smart Study Complete!";
-
-    document.getElementById("smartInput").style.display = "none";
-    document.getElementById("smartBtn").style.display = "none";
-
-    document.getElementById("smartRetry").classList.remove("hidden");
-
-    updateProgress();
-
-    return;
-  }
+document.getElementById("smartAnswer").classList.add("hidden");
 
 
-  // Pick different from last
-  let next;
+if(!smartPool.length){
 
-  do{
-    next = smartPool[
-      Math.floor(Math.random()*smartPool.length)
-    ];
-  }
-  while(next === lastQuestion && smartPool.length > 1);
-
-
-  current = next;
-  lastQuestion = next;
-
-
-  document.getElementById("smartQ").textContent = current.q;
-
-  document.getElementById("smartInput").value = "";
+endSmart();
+return;
 }
 
 
-/* Progress */
+let next;
 
-function updateProgress(){
+do{
+next=smartPool[Math.floor(Math.random()*smartPool.length)];
+}
+while(next===last && smartPool.length>1);
 
-  let total = allData.length * 5;
+current=next;
+last=next;
 
-  let currentScore = 0;
+current.seen++;
 
-  allData.forEach(q=>{
-    currentScore += Math.min(5, q.score);
-  });
+save();
 
-
-  let percent = (currentScore / total) * 100;
-
-  percent = Math.max(0, Math.min(100, percent));
-
-
-  const bar = document.getElementById("smartProgress");
-
-  bar.style.width = percent + "%";
-
-
-  // Red → Green
-  let r = Math.floor(255 - (percent*2.55));
-  let g = Math.floor(percent*2.55);
-
-  bar.style.background =
-    `rgb(${r},${g},80)`;
+document.getElementById("smartQ").textContent=current.q;
+document.getElementById("smartInput").value="";
 }
 
-
-/* Check */
 
 function checkSmart(){
 
-  const input =
-    document.getElementById("smartInput")
-    .value.trim().toLowerCase();
+const val=document.getElementById("smartInput")
+.value.trim().toLowerCase();
 
-  if(!input) return;
+if(!val) return;
 
-
-  const real = current.a.toLowerCase();
+const real=current.a.toLowerCase();
 
 
-  /* First */
+if(!redo){
 
-  if(!redo){
+if(val===real){
 
-    // Correct
-    if(input === real){
+correctSound.play();
 
-      correctSound.play();
+current.score++;
 
-      current.score++;
+if(current.score>=5){
+smartPool=smartPool.filter(q=>q!==current);
+}
 
-      // Remove if mastered
-      if(current.score >= 5){
+save();
+updateProgress();
 
-        smartPool = smartPool.filter(
-          q => q !== current
-        );
+nextSmart();
 
-      }
+}else{
 
-      save();
+wrongSound.play();
 
-      updateProgress();
+current.score-=2;
 
-      nextSmart();
+save();
+updateProgress();
 
-    }
+redo=true;
 
-    // Wrong
-    else{
+document.getElementById("smartAnswer")
+.textContent="Correct: "+current.a;
 
-      wrongSound.play();
-
-      current.score -= 2;
-
-      save();
-
-      updateProgress();
-
-      redo = true;
-
-
-      document.getElementById("smartAnswer")
-        .textContent = "Correct: " + current.a;
-
-      document.getElementById("smartAnswer")
-        .classList.remove("hidden");
-
-    }
-
-  }
-
-
-  /* Redo */
-
-  else{
-
-    if(input === real){
-
-      correctSound.play();
-
-      redo = false;
-
-      nextSmart();
-
-    }
-
-  }
+document.getElementById("smartAnswer")
+.classList.remove("hidden");
 
 }
 
+}else{
+
+if(val===real){
+
+correctSound.play();
+
+redo=false;
+nextSmart();
+}
+
+}
+
+}
+
+
+/* ============ PROGRESS ============ */
+
+function updateProgress(){
+
+let total=allData.length*5;
+
+let cur=0;
+
+allData.forEach(q=>{
+cur+=Math.min(5,q.score);
+});
+
+let percent=(cur/total)*100;
+
+percent=Math.max(0,Math.min(100,percent));
+
+const bar=document.getElementById("smartProgress");
+
+bar.style.width=percent+"%";
+
+let r=Math.floor(255-(percent*2.55));
+let g=Math.floor(percent*2.55);
+
+bar.style.background=`rgb(${r},${g},80)`;
+}
+
+
+/* ============ WEAK POINTS ============ */
+
+let weakData=[];
+
+
+function endSmart(){
+
+document.getElementById("smartQ").textContent=
+"🎉 Smart Study Complete!";
+
+document.getElementById("smartInput").style.display="none";
+document.getElementById("smartBtn").style.display="none";
+
+document.getElementById("smartRetry").classList.remove("hidden");
+
+buildWeak();
+
+document.getElementById("weakBox").classList.remove("hidden");
+}
+
+
+function buildWeak(){
+
+weakData=[...allData];
+
+weakData.sort((a,b)=>a.score-b.score);
+
+const count=Math.max(1,Math.ceil(weakData.length*0.15));
+
+weakData=weakData.slice(0,count);
+
+const list=document.getElementById("weakList");
+
+list.innerHTML="";
+
+weakData.forEach(q=>{
+
+const div=document.createElement("div");
+
+div.textContent=
+`• ${q.q} (Seen ${q.seen}×, Score ${q.score})`;
+
+list.appendChild(div);
+
+});
+
+}
+
+
+/* STUDY WEAK */
+
+function studyWeakFlash(){
+
+if(!weakData.length) return;
+
+hideAll();
+
+data=[...weakData];
+wrongFlash=[];
+flashStreak=0;
+
+shuffle(data);
+
+index=0;
+
+document.getElementById("flashMode").classList.remove("hidden");
+
+showFlash();
+}
+
+
+function studyWeakSmart(){
+
+if(!weakData.length) return;
+
+hideAll();
+
+smartPool=[...weakData];
+
+shuffle(smartPool);
+
+last=null;
+
+document.getElementById("smartMode").classList.remove("hidden");
+
+nextSmart();
+}
+
 </script>
+
 </body>
 </html>
