@@ -399,24 +399,46 @@ let current=null;
 
 function startSmart(){
 
-hideAll();
+  hideAll();
 
-redo=false;
-current=null;
-last=null;
+  redo = false;
+  current = null;
+  last = null;
 
-document.getElementById("weakBox").classList.add("hidden");
+  // Hide weak summary
+  document.getElementById("weakBox").classList.add("hidden");
 
-document.getElementById("smartRetry").classList.add("hidden");
+  // Re-enable UI
+  document.getElementById("smartInput").style.display = "block";
+  document.getElementById("smartBtn").style.display = "block";
 
-document.getElementById("smartInput").style.display="block";
-document.getElementById("smartBtn").style.display="block";
+  document.getElementById("smartRetry").classList.add("hidden");
 
-document.getElementById("smartMode").classList.remove("hidden");
+  document.getElementById("smartAnswer").classList.add("hidden");
 
-buildSmartPool();
-updateProgress();
-nextSmart();
+  document.getElementById("smartInput").value = "";
+
+  document.getElementById("smartMode").classList.remove("hidden");
+
+
+  // Reset mastered questions ONLY if all done
+  if(allData.every(q => q.score >= 5)){
+
+    allData.forEach(q=>{
+      q.score = 0;
+      q.seen = 0;
+    });
+
+    save();
+  }
+
+
+  // Rebuild pool
+  buildSmartPool();
+
+  updateProgress();
+
+  nextSmart();
 }
 
 
