@@ -114,6 +114,10 @@ Try Again
 
 <h2>Smart Study</h2>
 
+<div class="progress-wrap">
+  <div id="smartProgress"></div>
+</div>
+
 <div id="smartQ" class="smart-box"></div>
 
 <div id="smartAnswer" class="hidden"></div>
@@ -424,8 +428,8 @@ buildTest();
 
 /* ================= SMART ================= */
 
-let smartQueue = [];
-let smartIndex = 0;
+let smartPool = [];
+let lastQuestion = null;
 
 let redo = false;
 let current = null;
@@ -438,8 +442,9 @@ function startSmart(){
   hideAll();
 
   redo = false;
-  smartIndex = 0;
   current = null;
+  lastQuestion = null;
+
 
   document.getElementById("smartRetry").classList.add("hidden");
 
@@ -453,7 +458,7 @@ function startSmart(){
   document.getElementById("smartMode").classList.remove("hidden");
 
 
-  // Make sure every question has a score
+  // Initialize scores
   allData.forEach(q=>{
     if(typeof q.score !== "number"){
       q.score = 0;
@@ -462,41 +467,41 @@ function startSmart(){
 
   save();
 
-  buildSmartQueue();
+  buildSmartPool();
+
+  updateProgress();
+
   nextSmart();
 }
 
 
-/* Build weighted queue */
+/* Build Pool (Weighted) */
 
-function buildSmartQueue(){
+function buildSmartPool(){
 
-  smartQueue = [];
+  smartPool = [];
 
 
   allData.forEach(q=>{
 
     if(q.score < 5){
 
-      // Lower score = more copies
       let weight = Math.max(1, 6 - q.score);
-
-      // Prevent insane spam
-      weight = Math.min(weight, 10);
+      weight = Math.min(weight, 8);
 
       for(let i=0;i<weight;i++){
-        smartQueue.push(q);
+        smartPool.push(q);
       }
 
     }
 
   });
 
-  shuffle(smartQueue);
+  shuffle(smartPool);
 }
 
 
-/* Next Question */
+/* Pick Next */
 
 function nextSmart(){
 
@@ -505,8 +510,8 @@ function nextSmart(){
   document.getElementById("smartAnswer").classList.add("hidden");
 
 
-  // Finished
-  if(smartQueue.length === 0){
+  // Check finish
+  if(allData.every(q=>q.score >= 5)){
 
     document.getElementById("smartQ").textContent =
       "🎉 Smart Study Complete!";
@@ -516,12 +521,31 @@ function nextSmart(){
 
     document.getElementById("smartRetry").classList.remove("hidden");
 
+    updateProgress();
+
     return;
   }
 
 
-  // Get next unique question
-  current = smartQueue.shift();
+  // Rebuild if empty
+  if(smartPool.length === 0){
+    buildSmartPool();
+  }
+
+
+  // Pick without repeating
+  let next;
+
+  do{
+    next = smartPool[
+      Math.floor(Math.random()*smartPool.length)
+    ];
+  }
+  while(next === lastQuestion && smartPool.length > 1);
+
+
+  current = next;
+  lastQuestion = next;
 
 
   document.getElementById("smartQ").textContent = current.q;
@@ -530,7 +554,38 @@ function nextSmart(){
 }
 
 
-/* Check Answer */
+/* Progress */
+
+function updateProgress(){
+
+  let total = allData.length * 5;
+
+  let currentScore = 0;
+
+  allData.forEach(q=>{
+    currentScore += Math.min(5, q.score);
+  });
+
+  let percent = (currentScore / total) * 100;
+
+  percent = Math.max(0, Math.min(100, percent));
+
+
+  const bar = document.getElementById("smartProgress");
+
+  bar.style.width = percent + "%";
+
+
+  // Red → Green
+  let r = Math.floor(255 - (percent*2.55));
+  let g = Math.floor(percent*2.55);
+
+  bar.style.background =
+    `rgb(${r},${g},80)`;
+}
+
+
+/* Check */
 
 function checkSmart(){
 
@@ -544,7 +599,7 @@ function checkSmart(){
   const real = current.a.toLowerCase();
 
 
-  /* Normal attempt */
+  /* First attempt */
 
   if(!redo){
 
@@ -556,6 +611,8 @@ function checkSmart(){
       current.score += 1;
 
       save();
+
+      updateProgress();
 
       nextSmart();
 
@@ -569,6 +626,8 @@ function checkSmart(){
       current.score -= 2;
 
       save();
+
+      updateProgress();
 
       redo = true;
 
@@ -584,7 +643,7 @@ function checkSmart(){
   }
 
 
-  /* Redo attempt (no points) */
+  /* Redo (no score) */
 
   else{
 
