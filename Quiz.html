@@ -424,132 +424,184 @@ buildTest();
 
 /* ================= SMART ================= */
 
-let smartQueue=[];
-let smartIndex=0;
-let redo=false;
-let current=null;
+let smartQueue = [];
+let smartIndex = 0;
 
+let redo = false;
+let current = null;
+
+
+/* Start Smart */
 
 function startSmart(){
 
-hideAll();
+  hideAll();
 
-smartIndex=0;
-redo=false;
-current=null;
+  redo = false;
+  smartIndex = 0;
+  current = null;
 
-document.getElementById("smartRetry").classList.add("hidden");
+  document.getElementById("smartRetry").classList.add("hidden");
 
-document.getElementById("smartInput").style.display="block";
-document.getElementById("smartBtn").style.display="block";
+  document.getElementById("smartInput").style.display = "block";
+  document.getElementById("smartBtn").style.display = "block";
 
-document.getElementById("smartInput").value="";
+  document.getElementById("smartInput").value = "";
 
-document.getElementById("smartAnswer").classList.add("hidden");
+  document.getElementById("smartAnswer").classList.add("hidden");
 
-document.getElementById("smartMode").classList.remove("hidden");
+  document.getElementById("smartMode").classList.remove("hidden");
 
-buildSmartQueue();
 
-nextSmart();
+  // Make sure every question has a score
+  allData.forEach(q=>{
+    if(typeof q.score !== "number"){
+      q.score = 0;
+    }
+  });
+
+  save();
+
+  buildSmartQueue();
+  nextSmart();
 }
 
+
+/* Build weighted queue */
 
 function buildSmartQueue(){
 
-smartQueue=allData.filter(q=>q.score<5);
+  smartQueue = [];
 
-shuffle(smartQueue);
+
+  allData.forEach(q=>{
+
+    if(q.score < 5){
+
+      // Lower score = more copies
+      let weight = Math.max(1, 6 - q.score);
+
+      // Prevent insane spam
+      weight = Math.min(weight, 10);
+
+      for(let i=0;i<weight;i++){
+        smartQueue.push(q);
+      }
+
+    }
+
+  });
+
+  shuffle(smartQueue);
 }
 
+
+/* Next Question */
 
 function nextSmart(){
 
-redo=false;
+  redo = false;
 
-document.getElementById("smartAnswer").classList.add("hidden");
+  document.getElementById("smartAnswer").classList.add("hidden");
 
-if(smartIndex>=smartQueue.length){
 
-document.getElementById("smartQ").textContent="🎉 Mastered!";
+  // Finished
+  if(smartQueue.length === 0){
 
-document.getElementById("smartInput").style.display="none";
-document.getElementById("smartBtn").style.display="none";
+    document.getElementById("smartQ").textContent =
+      "🎉 Smart Study Complete!";
 
-document.getElementById("smartRetry").classList.remove("hidden");
+    document.getElementById("smartInput").style.display = "none";
+    document.getElementById("smartBtn").style.display = "none";
 
-return;
+    document.getElementById("smartRetry").classList.remove("hidden");
 
+    return;
+  }
+
+
+  // Get next unique question
+  current = smartQueue.shift();
+
+
+  document.getElementById("smartQ").textContent = current.q;
+
+  document.getElementById("smartInput").value = "";
 }
 
-current=smartQueue[smartIndex];
 
-document.getElementById("smartQ").textContent=current.q;
-
-document.getElementById("smartInput").value="";
-}
-
+/* Check Answer */
 
 function checkSmart(){
 
-const input=document.getElementById("smartInput")
-.value.trim().toLowerCase();
+  const input =
+    document.getElementById("smartInput")
+    .value.trim().toLowerCase();
 
-if(!input) return;
+  if(!input) return;
 
-const real=current.a.toLowerCase();
 
-if(!redo){
+  const real = current.a.toLowerCase();
 
-if(input===real){
 
-correctSound.play();
+  /* Normal attempt */
 
-current.score++;
-save();
+  if(!redo){
 
-smartIndex++;
-nextSmart();
+    // Correct
+    if(input === real){
 
-}
+      correctSound.play();
 
-else{
+      current.score += 1;
 
-wrongSound.play();
+      save();
 
-current.score-=2;
-save();
+      nextSmart();
 
-redo=true;
+    }
 
-document.getElementById("smartAnswer")
-.textContent="Correct: "+current.a;
+    // Wrong
+    else{
 
-document.getElementById("smartAnswer")
-.classList.remove("hidden");
+      wrongSound.play();
 
-}
+      current.score -= 2;
 
-}
+      save();
 
-else{
+      redo = true;
 
-if(input===real){
 
-correctSound.play();
+      document.getElementById("smartAnswer")
+        .textContent = "Correct: " + current.a;
 
-redo=false;
+      document.getElementById("smartAnswer")
+        .classList.remove("hidden");
 
-smartIndex++;
-nextSmart();
+    }
 
-}
+  }
 
-}
+
+  /* Redo attempt (no points) */
+
+  else{
+
+    if(input === real){
+
+      correctSound.play();
+
+      redo = false;
+
+      nextSmart();
+
+    }
+
+  }
 
 }
 
 </script>
-
 </body>
 </html>
